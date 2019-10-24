@@ -1,55 +1,64 @@
 # W2D4 - Promises
 
 ### To Do
-- [ ] Illustrate the "callback waterfall" (callback hell) problem
-- [ ] Introduction to Promises
-- [ ] Error handling with Promises (vs callbacks)
-- [ ] Creating our own Promises
-- [ ] Parallelizing async things (Promise.race and Promise.all)
+- [x] Illustrate the "callback waterfall" (callback hell) problem
+- [x] Introduction to Promises
+- [x] Error handling with Promises (vs callbacks)
+- [x] Creating our own Promises
+- [x] Parallelizing async things (Promise.race and Promise.all)
 
-### Callback Heck
+### Promises
+- An object that may (or may not) resolve to a value in the future
+- Offers an alternative solution to async programming
+- Will be in one of three possible states:
+  - `pending`: the promise has yet to resolve to a value or reject with an error
+  - `fulfilled`: the promise resolved successfully to a value (calling the `resolve` callback)
+  - `rejected`: the promise was rejected with an error (calling the `reject` callback)
+- Promises help us to avoid the _callback hell_ or _waterfall_
+
 ```js
-higherOrderFn((callbackOne) => {
-  callbackOne((callbackThree) => {
-    callbackTwo((callbackThree) => {
-      // do something
+// nested callbacks
+higherOrderFn((dataOne) => {
+  callbackTwo((dataTwo) => {
+    callbackThree((dataThree) => {
+      callbackFour((dataFour) => {
+        // do something
+      });
     });
   });
 });
+
+// promises
+functionOneReturningPromise()
+  .then(() => {
+    return functionTwoReturningPromise();
+  })
+  .then(() => {
+    return functionThreeReturningPromise();
+  })
+  .then(() => {
+    return functionFourReturningPromise();
+  })
+  .then(() => {
+    // do something
+  });
 ```
 
-### Promises
-- guarantee that you will do something
-- either it is fulfilled or it fails
-- limbo, floating
-- 3 states
-  - `fulfilled` - the promise has resolved succesfully
-  - `failed` - the promise has failed for something
-  - `pending` - the promise has neither failed nor resolved
+### Error Handling
+- A lot of Node callbacks use an _error-first_ approach where the first argument to the callback function is an error (if any) or null, and the second argument is the data. This can result in duplicated error handling logic in each callback in the chain.
 
-- An object that may or may not resolve to a value in the future
-
-### How do promises succeed
 ```js
-const myPromise = promiseGenerator();
-myPromise.then((data) => {
-  console.log(data);
-});
-```
-
-### Error Handling in Callbacks
-```js
-higherOrderFn((err, dataOne) => {
-  if (err) {
-    throw err;
+higherOrderFn((errOne, dataOne) => {
+  if (errOne) {
+    throw errOne;
   }
-  callbackTwo((err, dataTwo) => {
-    if (err) {
-      throw err;
+  callbackTwo((errTwo, dataTwo) => {
+    if (errTwo) {
+      throw errTwo;
     }
-    callbackThree((err, dataThree) => {
-      if (err) {
-        throw err;
+    callbackThree((errThree, dataThree) => {
+      if (errThree) {
+        throw errThree;
       }
       // do something
     });
@@ -57,46 +66,66 @@ higherOrderFn((err, dataOne) => {
 });
 ```
 
-DRY - Don't Repeat Yourself
-WET - Write Everything Twice
+- Promises allow us to handle any errors in the _Promise chain_ with a single `.catch()` on the end of the chain
 
-### Handling Errors With Promises
 ```js
-const myPromise = promiseGenerator();
-myPromise
+functionOneReturningPromise()
   .then(() => {
-    // returns a promise
+    return functionTwoReturningPromise();
   })
   .then(() => {
-    // returns a promise
+    return functionThreeReturningPromise();
   })
   .then(() => {
-    // returns a promise
+    // do something
   })
-  .then(() => {
-    // returns a promise
-  })
-  .catch((err) => {
-    // handle error
+  .catch((error) => {
+    throw error;
   });
 ```
 
+### Running Async Operations in Parallel
+- Instead of waiting for each operation to resolve before moving on to the next one, we can run them in parallel with methods like `Promise.all` and `Promise.race`
+- These methods accept something that can be iterated over as an argument (usually an array)
+- `Promise.all`: Waits for **all** of the promises to resolve/reject
+- `Promise.race`: Waits for **any** of the promises to resolve/reject
 
+```js
+const promises = [promiseOne, promiseTwo, promiseThree];
 
+Promise.all(promises)
+  .then((arrayOfResults) => {
+    console.log('results', arrayOfResults.join(', '));
+  })
+  .catch((error) => {
+    throw error;
+  });
 
+Promise.race(promises)
+  .then((firstResult) => {
+    console.log('result of the first promise to resolve', firstResult);
+  })
+  .catch((error) => {
+    console.error('error from the first promise to reject', error);
+  });
+```
 
+### Creating Promises
+- A new promise can be created using the `Promise` class
+- The `Promise` constructor takes a callback that accepts two functions as arguments:
+  - `resolve`: This callback is called when the operation has finished successfully
+  - `reject`: This callback is called if the operation failed (usually with the error)
 
+```js
+const myPromise = new Promise((resolve, reject) => {
+  // do something and resolve when finished or reject with an error
+});
 
+myPromise.then((data) => {
+  // do something with the resolved promises data
+});
+```
 
-
-
-
-
-
-
-
-
-
-
-
-#
+### Useful Links
+- [MDN: Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/prototype)
+- [Wikipedia: Futures and promises](https://en.wikipedia.org/wiki/Futures_and_promises)
